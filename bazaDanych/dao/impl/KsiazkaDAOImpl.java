@@ -25,14 +25,16 @@ public class KsiazkaDAOImpl implements KsiazkaDAO {
 		Connection myConn = driver.getDatabaseConnection();
 
 		try {
-			PreparedStatement prepStmt = myConn.prepareStatement("SELECT * from ksiegarnia.ksiazki");
+			PreparedStatement prepStmt = myConn
+					.prepareStatement("SELECT * FROM ksiegarnia.ksiazki k where k.dostepneSzt>0");
 
 			ResultSet wynik = prepStmt.executeQuery();
 			while (wynik.next()) {
 				Ksiazka ksiazka = new Ksiazka();
+				ksiazka.setId(wynik.getInt(1));
 				ksiazka.setTytul(wynik.getString(2));
 				ksiazka.setAutor(wynik.getString(3));
-				ksiazka.setIloscOgolna(wynik.getInt(4));
+				ksiazka.setDostepneSzt(wynik.getInt(5));
 
 				listaKsiazek.add(ksiazka);
 			}
@@ -107,6 +109,12 @@ public class KsiazkaDAOImpl implements KsiazkaDAO {
 			statement.setInt(4, 1);
 
 			statement.execute();
+
+			PreparedStatement statement2 = connection
+					.prepareStatement("UPDATE `ksiegarnia`.`ksiazki` SET `dostepneSzt` =dostepneSzt-1 WHERE `id` =?");
+			statement2.setInt(1, ksiazka.getId());
+
+			statement2.execute();
 			czyKsiazaWypoczona = true;
 
 		} catch (SQLException e) {
@@ -116,9 +124,21 @@ public class KsiazkaDAOImpl implements KsiazkaDAO {
 	}
 
 	@Override
-	public boolean oddajKsiazke(Ksiazka ksiazka) {
-		// TODO Auto-generated method stub
-		return false;
+	public void oddajKsiazke(Ksiazka ksiazka) {
+		Connection myConn = driver.getDatabaseConnection();
+		try{
+			PreparedStatement prepStmt = myConn.prepareStatement("UPDATE `ksiegarnia`.`wypozyczalnia`"
+					+"SET `czyWypozyczona` =0 WHERE `idKsiazki` =?");
+			prepStmt.setInt(1, ksiazka.getId());
+			prepStmt.execute();
+		
+		}
+		catch(SQLException e)
+		{
+			e.printStackTrace();
+		}
+		
+		
 	}
 
 	@Override
@@ -129,7 +149,7 @@ public class KsiazkaDAOImpl implements KsiazkaDAO {
 			try {
 
 				PreparedStatement prepStmt = myConn
-						.prepareStatement("SELECT k.tytul, k.autor FROM ksiegarnia.ksiazki k  "
+						.prepareStatement("SELECT k.id, k.tytul, k.autor FROM ksiegarnia.ksiazki k  "
 								+ "LEFT JOIN ksiegarnia.wypozyczalnia w ON (k.Id = w.IdKsiazki) "
 								+ "LEFT JOIN ksiegarnia.uzytkownik u ON (u.Id = w.idUzytkownika) "
 								+ "WHERE u.login=? and w.czyWypozyczona=1");
@@ -138,8 +158,9 @@ public class KsiazkaDAOImpl implements KsiazkaDAO {
 				ResultSet wynik = prepStmt.executeQuery();
 				while (wynik.next()) {
 					Ksiazka ksiazka = new Ksiazka();
-					ksiazka.setTytul(wynik.getString(1));
-					ksiazka.setAutor(wynik.getString(2));
+					ksiazka.setId(wynik.getInt(1));
+					ksiazka.setTytul(wynik.getString(2));
+					ksiazka.setAutor(wynik.getString(3));
 
 					listaWypozyczonychKsiazek.add(ksiazka);
 				}
@@ -151,6 +172,32 @@ public class KsiazkaDAOImpl implements KsiazkaDAO {
 
 		}
 
+	}
+
+	@Override
+	public List<Ksiazka> wyszukajKsiazke(String warunek,String wartosc) {
+		List<Ksiazka> znalezioneKsiazki = new ArrayList<>();
+		Connection conn = driver.getDatabaseConnection();
+		try {
+			PreparedStatement prepStmt = conn.prepareStatement("select * from ksiegarnia.ksiazki  where " + warunek +"  like '%"+ wartosc + "%'");
+		
+			ResultSet wynik = prepStmt.executeQuery();
+			while (wynik.next()){
+				Ksiazka ksiazka = new Ksiazka();
+				ksiazka.setId(wynik.getInt(1));
+				ksiazka.setTytul(wynik.getString(2));
+				ksiazka.setAutor(wynik.getString(3));
+				ksiazka.setIloscOgolna(wynik.getInt(4));
+				ksiazka.setDostepneSzt(wynik.getInt(5));
+				
+				znalezioneKsiazki.add(ksiazka);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return znalezioneKsiazki;
 	}
 
 }

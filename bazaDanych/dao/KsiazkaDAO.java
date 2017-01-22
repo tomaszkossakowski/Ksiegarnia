@@ -18,5 +18,7 @@ public interface KsiazkaDAO {
 
 	boolean wypozyczKsiazke(Uzytkownik uzytkownik, Ksiazka ksiazka);
 
-	boolean oddajKsiazke(Ksiazka ksiazka);
+	void oddajKsiazke(Ksiazka ksiazka);
+	
+	List<Ksiazka> wyszukajKsiazke(String warunek,String wartosc);
 }

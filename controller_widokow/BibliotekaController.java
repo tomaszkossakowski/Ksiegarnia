@@ -52,5 +52,17 @@ public class BibliotekaController {
 		listaWypozyczonychKsiazek = ksiazkaDAO.pokazWypozyczoneKsiazki(uzytkownik);
 		return listaWypozyczonychKsiazek;
 	}
+	
+	public void oddajKsiazke(Ksiazka ksiazka)
+	{
+		ksiazkaDAO.oddajKsiazke(ksiazka);
+	}
+	
+public List<Ksiazka>wyszukajKsiazke(String warunek ,String wartosc){
+	List<Ksiazka> wyszukaneKsiazki = new ArrayList<>();
+	wyszukaneKsiazki = ksiazkaDAO.wyszukajKsiazke(warunek , wartosc);
+	return wyszukaneKsiazki;
+}
+	
 
 }

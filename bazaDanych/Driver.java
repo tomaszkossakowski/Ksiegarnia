@@ -19,7 +19,7 @@ public class Driver {
 		Connection connection = null;
 
 		try {
-			connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/ksiegarnia", "xxx", "xxx");
+			connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/ksiegarnia", "***", "***");
 
 		} catch (SQLException e) {
 			System.out.println("Connection Failed! Check output console");

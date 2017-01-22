@@ -21,9 +21,9 @@ public class Biblioteka extends JFrame {
 	private JComboBox combo;
 
 	DefaultListModel<Ksiazka> modelListyWszystkichKsiazek, modelListyWypozyczonychKsiazek, DefaultListModel;
-	JList<Ksiazka> listaWszyskichKsiazek, listaKsiazekDoOddania, testowa;
+	JList<Ksiazka> listaWszyskichKsiazek, listaWypozyczonychKsiazek;
 	BibliotekaController bibliotekaController;
-	List<Ksiazka> listaWszystkichKsiazek, listaWypozyczonychKsiazek, test;
+	List<Ksiazka> listaWszystkichKsiazek, listaMoichKsiazek;
 	KsiazkaDAO ksiazkaDAO;
 	UserAuth uzytkownik;
 
@@ -32,6 +32,7 @@ public class Biblioteka extends JFrame {
 		ksiazkaDAO = new KsiazkaDAOImpl();
 		Ksiazka ksi = new Ksiazka();
 		bibliotekaController = new BibliotekaController();
+		
 
 		initListaWszstkichKsiazek();
 
@@ -49,21 +50,11 @@ public class Biblioteka extends JFrame {
 		panel1.setBounds(70, 200, 220, 230);
 
 		modelListyWszystkichKsiazek = new DefaultListModel<>();
-
+		modelListyWypozyczonychKsiazek = new DefaultListModel<>();
 		dodajModelWszyskichKsiazek();
 
 		listaWszyskichKsiazek = new JList<>(modelListyWszystkichKsiazek);
-
-//		List<Ksiazka> listaWypozyczonychKsiazek = new ArrayList<>();
-//		listaWypozyczonychKsiazek = bibliotekaController.getListaWypozyczonychKsiazek(UserAuth.zalogowanyUzytkownik);
-//		DefaultListModel<Ksiazka> lista = new DefaultListModel<>();
-//
-//		for (Ksiazka k : listaWypozyczonychKsiazek) {
-//			lista.addElement(k);
-//		}
-//
-//		JList<Ksiazka> listaWypozyczonych = new JList<>(lista);
-//		listaWypozyczonych = new JList<>(lista);
+		listaWypozyczonychKsiazek = new JList<>(modelListyWypozyczonychKsiazek);
 
 		dodaj = new JButton("dodaj");
 		dodaj.setBounds(70, 180, 90, 30);
@@ -106,6 +97,8 @@ public class Biblioteka extends JFrame {
 
 		wypozycz = new JButton("Wypozycz");
 		wypozycz.setBounds(200, wyszukaj.getBounds().y, 100, 20);
+		wypozycz.setEnabled(false);
+
 
 		listaWszyskichKsiazek.setBounds(25, 80, 280, 150);
 
@@ -116,8 +109,7 @@ public class Biblioteka extends JFrame {
 		wyszukajKsiazWysz.setBounds(30, wyszukajKsUzPole.getBounds().y, 100, 20);
 
 		combo = new JComboBox();
-		combo.addItem("imie");
-		combo.addItem("nazwisko");
+		combo.addItem("tytul");
 		combo.addItem("autor");
 		combo.setBounds(220, wyszukajKsUzPole.getBounds().y, 70, 20);
 
@@ -128,6 +120,7 @@ public class Biblioteka extends JFrame {
 		panel2.add(wyszukajKsiazWysz);
 		panel2.add(combo);
 
+
 		add(panel2);
 
 		panel3.setBorder(BorderFactory.createTitledBorder("Oddaj ksi¹¿kê"));
@@ -135,18 +128,19 @@ public class Biblioteka extends JFrame {
 		panel3.setSize(100, 100);
 		panel3.setBounds(340, 340, 330, 220);
 
-		listaKsiazekDoOddania = new JList<>(modelListyWszystkichKsiazek);
+		// listaWypozyczonychKsiazek = new JList<>(modelListyWszystkichKsiazek);
 
 		oddaj = new JButton("Oddaj");
 		oddaj.setBounds(190, 180, 100, 20);
 		mojeKsiazki = new JButton("Moje Ksi¹¿ki");
 		mojeKsiazki.setBounds(25, oddaj.getBounds().y, 130, 20);
+		
 
-//		listaWypozyczonych.setBounds(listaWszyskichKsiazek.getBounds().x, 30, 280, 130);
+		listaWypozyczonychKsiazek.setBounds(listaWszyskichKsiazek.getBounds().x, 30, 280, 130);
 
 		panel3.add(oddaj);
 		panel3.add(mojeKsiazki);
-//		panel3.add(listaWypozyczonych);
+		panel3.add(listaWypozyczonychKsiazek);
 		add(panel3);
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -177,11 +171,20 @@ public class Biblioteka extends JFrame {
 		wypozycz.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (bibliotekaController.wypozyczKsiazke(UserAuth.zalogowanyUzytkownik,
-						listaWszyskichKsiazek.getSelectedValue())) {
-					// odswiesWypozyczoneKsiazki();
-				} else {
-					JOptionPane.showMessageDialog(null, "Coœ posz³o nie tak :(");
+				if (listaWszyskichKsiazek.getSelectedValue()!=null){
+					if(bibliotekaController.wypozyczKsiazke(UserAuth.zalogowanyUzytkownik, listaWszyskichKsiazek.getSelectedValue())){
+						JOptionPane.showMessageDialog(null, "Ksiazka wypozyczona");
+						odswiesWszystkieKsiazki();
+					
+					}
+					else {
+						JOptionPane.showMessageDialog(null, "nie uda³o siê wypozyczyæ ksiazki");
+
+					}
+
+					
+				} else{
+					JOptionPane.showMessageDialog(null, "nie wybra³eœ zadnej ksiazki");
 				}
 
 			}
@@ -190,6 +193,10 @@ public class Biblioteka extends JFrame {
 		mojeKsiazki.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				initListaMoichKsiazek();
+				dodajModelMoichKsiazek();
+				mojeKsiazki.setEnabled(false);
+				wypozycz.setEnabled(true);
 
 			}
 		});
@@ -198,14 +205,24 @@ public class Biblioteka extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if(listaWypozyczonychKsiazek.getSelectedValue()!=null){
+				bibliotekaController.oddajKsiazke(listaWypozyczonychKsiazek.getSelectedValue());
+				odswiesWszystkieKsiazki();
+				}
+				else {
+					JOptionPane.showMessageDialog(null, "musisz zaznaczyæ ksiazke, któr¹ chcesz oddac");
+					
+				}
 
 			}
 		});
 		wyszukaj.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
+				listaWszystkichKsiazek = bibliotekaController.wyszukajKsiazke(combo.getSelectedItem().toString(),
+						wyszukajKsUzPole.getText());
+				modelListyWszystkichKsiazek.removeAllElements();
+				dodajModelWszyskichKsiazek();
 			}
 		});
 
@@ -219,6 +236,10 @@ public class Biblioteka extends JFrame {
 	public void odswiesWszystkieKsiazki() {
 		listaWszystkichKsiazek = bibliotekaController.getListaWszyskitchKsiazek();
 		modelListyWszystkichKsiazek.removeAllElements();
+
+		listaMoichKsiazek = bibliotekaController.getListaWypozyczonychKsiazek(UserAuth.zalogowanyUzytkownik);
+		modelListyWypozyczonychKsiazek.removeAllElements();
+		dodajModelMoichKsiazek();
 		dodajModelWszyskichKsiazek();
 	}
 
@@ -229,22 +250,17 @@ public class Biblioteka extends JFrame {
 		}
 	}
 
-	// public void odswiesWypozyczoneKsiazki()
-	// {
-	// listaWypozyczonychKsiazek =
-	// bibliotekaController.getListaWypozyczonychKsiazek(UserAuth.zalogowanyUzytkownik);
-	// modelListyWypozyczonychKsiazek.removeAllElements();
-	// dodajModelWypozyczonychKsiazek();
-	// }
-	//
-	// public void dodajModelWypozyczonychKsiazek()
-	// {
-	// for (Ksiazka k : listaWypozyczonychKsiazek)
-	// {
-	// modelListyWypozyczonychKsiazek.addElement(k);
-	//
-	// }
-	// }
+	private void initListaMoichKsiazek() {
+		listaMoichKsiazek = new ArrayList<>();
+		listaMoichKsiazek = bibliotekaController.getListaWypozyczonychKsiazek(UserAuth.zalogowanyUzytkownik);
+
+	}
+
+	private void dodajModelMoichKsiazek() {
+		for (Ksiazka k : listaMoichKsiazek) {
+			modelListyWypozyczonychKsiazek.addElement(k);
+		}
+	}
 
 	public void wyczyscOknoDodawaniaKsiazek() {
 		dodajAutorPole.setText("");
